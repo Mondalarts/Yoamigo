@@ -11,8 +11,8 @@
     <p class="title">Login</p>
     <form class="form" id="loginForm" onsubmit="return false;">
       <div class="input-group">
-        <label for="email">Email</label>
-        <input type="email" id="email" placeholder="name@example.com" />
+        <label for="flink">Flink (number)</label>
+        <input type="number" id="flink" placeholder="e.g., 845213" />
       </div>
       <div class="input-group">
         <label for="password">Password</label>
@@ -25,11 +25,14 @@
     <div class="social-message"><div class="line"></div><p class="message">Or continue with</p><div class="line"></div></div>
     <div class="social-icons">
       <button class="icon" id="googleBtn" aria-label="Login with Google">Google</button>
+      <button class="icon apple" id="appleBtn" aria-label="Login with Apple">Apple</button>
       <button class="icon anon" id="anonBtn" aria-label="Anonymous">Guest</button>
     </div>
     <p class="signup">Don’t have an account? <a href="#" id="signupBtn">Sign up</a></p>
+    <p class="hint">Sign Up will generate a new flink for this device.</p>
   </div>
 
   <script type="module" src="./script.js"></script>
 </body>
 </html>
+
