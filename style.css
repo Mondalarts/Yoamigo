@@ -79,4 +79,5 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui
 }
 
 /* Ensure auth styles override chat on login */
-.auth-body .input-group input{box-shadow:none!important}
+.auth-body .input-group input{outline:none!important; box-shadow:none!important; background:#111827!important; border:1px solid #374151!important; color:#f3f4f6!important}
+
