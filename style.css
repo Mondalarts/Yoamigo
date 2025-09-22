@@ -64,11 +64,6 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui
 @media (max-width: 920px){
   .wa-shell{grid-template-columns:1fr}
 }
-/* Fix login page override */
-.auth-body .form-container{max-width:360px;margin:auto}
-.auth-body .input-group input{background:#111827;border:1px solid #374151;color:#f3f4f6}
-.auth-body .sign{background:#a78bfa;color:#111827}
-.auth-body .forgot a{color:#9ca3af}
-@media (max-width:480px){ .auth-body{padding:16px} }
+
 
 
