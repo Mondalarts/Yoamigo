@@ -19,16 +19,20 @@ const $ = (id) => document.getElementById(id);
 const emailInp = $('email');
 const pwdInp   = $('password');
 
-// Sign in with email/password
-$('loginBtn')?.addEventListener('click', async ()=>{
+
+// Sign up with email/password
+$('signupBtn')?.addEventListener('click', async (e)=>{
+  e.preventDefault();
   try{
     const email = emailInp.value.trim();
     const pwd   = pwdInp.value.trim();
-    if(!email || !pwd) return alert('Enter email and password');
-    await signInWithEmailAndPassword(auth, email, pwd);
+    if(!email || !pwd) return alert('Enter email and password to sign up');
+    await createUserWithEmailAndPassword(auth, email, pwd);
+    alert('Account created. Redirecting to chat…');
     location.href = './chat.html';
   }catch(e){ alert(e.message); }
 });
+
 
 // Sign up with email/password + create username index
 $('signupBtn')?.addEventListener('click', async (e)=>{
@@ -80,3 +84,4 @@ $('forgot')?.addEventListener('click', async (e)=>{
     alert('Password reset email sent.');
   }catch(err){ alert(err.message); }
 });
+
