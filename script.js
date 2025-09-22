@@ -19,6 +19,7 @@ const $ = (id) => document.getElementById(id);
 const emailInp = $('email');
 const pwdInp   = $('password');
 
+// Sign in with email/password
 $('loginBtn')?.addEventListener('click', async ()=>{
   try{
     const email = emailInp.value.trim();
@@ -29,6 +30,7 @@ $('loginBtn')?.addEventListener('click', async ()=>{
   }catch(e){ alert(e.message); }
 });
 
+// Sign up with email/password + create username index
 $('signupBtn')?.addEventListener('click', async (e)=>{
   e.preventDefault();
   try{
@@ -37,10 +39,12 @@ $('signupBtn')?.addEventListener('click', async (e)=>{
     if(!email || !pwd) return alert('Enter email and password to sign up');
 
     await createUserWithEmailAndPassword(auth, email, pwd);
+
     const uid = auth.currentUser.uid;
     const username = email.split('@')[0];
     const unameKey = username.toLowerCase();
 
+    // Create user profile and a username index for search
     await setDoc(doc(db,'users', uid), { username, photoURL:'', createdAt: Date.now() });
     await setDoc(doc(db,'usernames', unameKey), { uid });
 
@@ -49,6 +53,7 @@ $('signupBtn')?.addEventListener('click', async (e)=>{
   }catch(e){ alert(e.message); }
 });
 
+// Google sign-in
 $('googleBtn')?.addEventListener('click', async ()=>{
   try{
     const provider = new GoogleAuthProvider();
@@ -57,6 +62,7 @@ $('googleBtn')?.addEventListener('click', async ()=>{
   }catch(e){ alert(e.message); }
 });
 
+// Anonymous (Guest)
 $('anonBtn')?.addEventListener('click', async ()=>{
   try{
     await signInAnonymously(auth);
@@ -64,6 +70,7 @@ $('anonBtn')?.addEventListener('click', async ()=>{
   }catch(e){ alert(e.message); }
 });
 
+// Password reset
 $('forgot')?.addEventListener('click', async (e)=>{
   e.preventDefault();
   try{
