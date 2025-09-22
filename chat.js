@@ -1,6 +1,9 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import {
+  getFirestore, doc, getDoc, setDoc, collection, addDoc, updateDoc,
+  serverTimestamp, query, orderBy, onSnapshot, where
+} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
 const cfg = {
   apiKey: "AIzaSyCfhn6-aFg9u_S93ioPLp6TSjjhnDveMfA",
@@ -15,6 +18,7 @@ const app = initializeApp(cfg);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
+/* UI refs */
 const contactList = document.getElementById('contactList');
 const userSearch  = document.getElementById('userSearch');
 const addContactBtn = document.getElementById('addContactBtn');
@@ -36,6 +40,14 @@ const msg  = document.getElementById('msg');
 const sendBtn = document.getElementById('sendBtn');
 const guestNotice = document.getElementById('guestNotice');
 
+/* Friend request UI */
+const reqBar   = document.getElementById('reqBar');
+const reqCount = document.getElementById('reqCount');
+const openReqBtn = document.getElementById('openReqBtn');
+const reqDrawer  = document.getElementById('reqDrawer');
+const reqList    = document.getElementById('reqList');
+const closeReqBtn= document.getElementById('closeReqBtn');
+
 let currentUser = null;
 let activeContact = null;
 let unsubscribeRoom = null;
@@ -46,6 +58,8 @@ onAuthStateChanged(auth, async (user)=>{
   await ensureUserDoc(user);
   await loadMeUI(user);
   await loadContacts();
+  listenToIncomingRequests();
+
   if(user.isAnonymous){
     sendBtn.disabled = true; msg.disabled = true; guestNotice.classList.remove('hidden');
   }
@@ -138,26 +152,106 @@ function appendMessage(m){
 function escapeHTML(s){ return (s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 function formatTime(ts){ try{ return ts?.toDate?.().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) || ''; }catch{return ''} }
 
-// Username search -> UID via index
+/* Friend Requests */
+
+// Send request instead of direct add
 addContactBtn.addEventListener('click', async ()=>{
   const name = userSearch.value.trim().toLowerCase();
   if(!name) return;
+
   const ix = await getDoc(doc(db,'usernames', name));
   if(!ix.exists()){ alert('No user found for that username'); return; }
-  const uid = ix.data().uid;
-  if(uid === currentUser.uid) { alert('Cannot add yourself'); return; }
-  const usnap = await getDoc(doc(db,'users', uid));
-  const u = usnap.data() || { username: name, photoURL: '' };
-  await setDoc(doc(db,'contacts', currentUser.uid, 'list', uid), {
-    username: u.username || name, photoURL: u.photoURL || ''
+  const toUid = ix.data().uid;
+  if(toUid === currentUser.uid) { alert('Cannot send request to yourself'); return; }
+
+  const meSnap = await getDoc(doc(db,'users', currentUser.uid));
+  const me = meSnap.data() || { username: 'me' };
+  const themSnap = await getDoc(doc(db,'users', toUid));
+  const them = themSnap.data() || { username: name };
+
+  const existingFriend = await getDoc(doc(db,'contacts', currentUser.uid, 'list', toUid));
+  if(existingFriend.exists()){ alert('Already in contacts'); userSearch.value=''; return; }
+
+  await addDoc(collection(db,'friend_requests'), {
+    fromUid: currentUser.uid,
+    fromName: me.username || 'me',
+    toUid,
+    toName: them.username || name,
+    status: 'pending',
+    createdAt: serverTimestamp()
   });
+
+  alert('Friend request sent');
   userSearch.value='';
 });
 
-// Profile drawer
+// Incoming requests listener
+function listenToIncomingRequests(){
+  const qIn = query(collection(db,'friend_requests'),
+    where('toUid','==', currentUser.uid),
+    where('status','==','pending')
+  );
+  onSnapshot(qIn, (snap)=>{
+    const n = snap.size;
+    if(n>0){
+      reqBar.style.display = 'flex';
+      reqCount.textContent = `${n} friend request${n>1?'s':''}`;
+    }else{
+      reqBar.style.display = 'none';
+    }
+    renderReqList(snap);
+  });
+}
+
+function renderReqList(snap){
+  reqList.innerHTML = '';
+  snap.forEach(d=>{
+    const r = d.data(); const id = d.id;
+    const item = document.createElement('div');
+    item.style.display='flex';
+    item.style.justifyContent='space-between';
+    item.style.alignItems='center';
+    item.style.padding='8px 0';
+    item.style.borderBottom='1px solid #0a0f13';
+    item.innerHTML = `<div><strong>${escapeHTML(r.fromName||'user')}</strong> wants to connect</div>`;
+    const row = document.createElement('div');
+    const acceptBtn = document.createElement('button');
+    acceptBtn.className='btn tiny'; acceptBtn.textContent='Accept';
+    acceptBtn.addEventListener('click', ()=>acceptRequest(id, r));
+    const rejectBtn = document.createElement('button');
+    rejectBtn.className='btn tiny'; rejectBtn.textContent='Reject';
+    rejectBtn.style.marginLeft='8px';
+    rejectBtn.addEventListener('click', ()=>rejectRequest(id));
+    row.append(acceptBtn, rejectBtn);
+    item.appendChild(row);
+    reqList.appendChild(item);
+  });
+}
+
+async function acceptRequest(id, r){
+  const fromUser = await getDoc(doc(db,'users', r.fromUid));
+  const toUser   = await getDoc(doc(db,'users', r.toUid));
+  const fromName = (fromUser.data()?.username)|| r.fromName || 'user';
+  const toName   = (toUser.data()?.username)|| r.toName || 'user';
+
+  await setDoc(doc(db,'contacts', r.fromUid, 'list', r.toUid), { username: toName, photoURL: '' }, { merge:true });
+  await setDoc(doc(db,'contacts', r.toUid,   'list', r.fromUid), { username: fromName, photoURL: '' }, { merge:true });
+
+  await updateDoc(doc(db,'friend_requests', id), { status:'accepted' });
+  alert('Friend added');
+}
+
+async function rejectRequest(id){
+  await updateDoc(doc(db,'friend_requests', id), { status:'rejected' });
+  alert('Request rejected');
+}
+
+openReqBtn?.addEventListener('click', ()=> reqDrawer.classList.remove('hidden'));
+closeReqBtn?.addEventListener('click', ()=> reqDrawer.classList.add('hidden'));
+
+/* Profile */
 meProfileBtn.addEventListener('click', ()=> profileDrawer.classList.remove('hidden'));
 closeProfileBtn.addEventListener('click', ()=> profileDrawer.classList.add('hidden'));
-
 saveProfileBtn.addEventListener('click', async ()=>{
   const uname = profileName.value.trim();
   await setDoc(doc(db,'users', currentUser.uid), { username: uname }, { merge:true });
