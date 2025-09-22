@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-const firebaseConfig = {
+const cfg = {
   apiKey: "AIzaSyCfhn6-aFg9u_S93ioPLp6TSjjhnDveMfA",
   authDomain: "yoamigo-347fe.firebaseapp.com",
   projectId: "yoamigo-347fe",
@@ -12,26 +12,37 @@ const firebaseConfig = {
   measurementId: "G-61R9G9SFLV"
 };
 
-const app = initializeApp(firebaseConfig);
+const app = initializeApp(cfg);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
 const feed = document.getElementById('chat-window');
 const form = document.getElementById('chat-form');
 const msg  = document.getElementById('msg');
+const sendBtn = document.getElementById('sendBtn');
+const guestNotice = document.getElementById('guestNotice');
 const sidebar = document.getElementById('sidebar');
 const hamburger = document.getElementById('hamburger');
 
 hamburger?.addEventListener('click', ()=> sidebar.classList.toggle('open'));
 
 onAuthStateChanged(auth, user => {
-  if(!user){ location.href='index.html'; return; }
-  boot(user);
+  if(!user){ location.href='./index.html'; return; }
+  const isGuest = user.isAnonymous === true;
+
+  // Disable send for guests (as requested)
+  if(isGuest){
+    sendBtn.disabled = true;
+    msg.disabled = true;
+    guestNotice.classList.remove('hidden');
+  }
+
+  boot(user, isGuest);
 });
 
 document.getElementById('logoutBtn')?.addEventListener('click', ()=>signOut(auth));
 
-function boot(user){
+function boot(user, isGuest){
   const ref = collection(db,'rooms','general','messages');
   const q = query(ref, orderBy('timestamp'));
 
@@ -45,10 +56,11 @@ function boot(user){
 
   form.addEventListener('submit', async (e)=>{
     e.preventDefault();
+    if(isGuest) return; // safety
     const text = msg.value.trim(); if(!text) return;
     await addDoc(ref, {
       text,
-      sender:(auth.currentUser?.email||'user').split('@')[0],
+      sender:(auth.currentUser?.email||'guest').split('@')[0],
       uid:auth.currentUser?.uid||'',
       timestamp: serverTimestamp()
     });
@@ -69,3 +81,4 @@ function renderMsg(m, user){
   if(me){ wrap.append(bubble,ava);} else { wrap.append(ava,bubble); }
   return wrap;
 }
+
