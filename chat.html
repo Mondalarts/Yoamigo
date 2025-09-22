@@ -17,6 +17,11 @@
         <button class="btn ghost" id="logoutBtn">Logout</button>
       </header>
 
+      <div class="req-bar" id="reqBar" style="display:none;padding:6px 10px;background:#1a242b;border-bottom:1px solid #0a0f13;display:flex;justify-content:space-between;align-items:center;">
+        <span id="reqCount">0 friend requests</span>
+        <button class="btn tiny" id="openReqBtn">View</button>
+      </div>
+
       <div class="wa-search">
         <input id="userSearch" type="text" placeholder="Search username">
         <button id="addContactBtn" class="btn tiny">Add</button>
@@ -48,6 +53,7 @@
     </main>
   </div>
 
+  <!-- Profile drawer -->
   <div class="profile-drawer hidden" id="profileDrawer">
     <div class="drawer-card">
       <h3>My Profile</h3>
@@ -61,7 +67,17 @@
     </div>
   </div>
 
+  <!-- Friend requests drawer -->
+  <div class="profile-drawer hidden" id="reqDrawer">
+    <div class="drawer-card">
+      <h3>Friend requests</h3>
+      <div id="reqList"></div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn ghost" id="closeReqBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module" src="./chat.js"></script>
 </body>
 </html>
-
