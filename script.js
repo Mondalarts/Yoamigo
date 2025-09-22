@@ -19,22 +19,16 @@ const $ = (id) => document.getElementById(id);
 const emailInp = $('email');
 const pwdInp   = $('password');
 
-
-// Sign up with email/password
-$('signupBtn')?.addEventListener('click', async (e)=>{
-  e.preventDefault();
+$('loginBtn')?.addEventListener('click', async ()=>{
   try{
     const email = emailInp.value.trim();
     const pwd   = pwdInp.value.trim();
-    if(!email || !pwd) return alert('Enter email and password to sign up');
-    await createUserWithEmailAndPassword(auth, email, pwd);
-    alert('Account created. Redirecting to chat…');
+    if(!email || !pwd) return alert('Enter email and password');
+    await signInWithEmailAndPassword(auth, email, pwd);
     location.href = './chat.html';
   }catch(e){ alert(e.message); }
 });
 
-
-// Sign up with email/password + create username index
 $('signupBtn')?.addEventListener('click', async (e)=>{
   e.preventDefault();
   try{
@@ -48,7 +42,6 @@ $('signupBtn')?.addEventListener('click', async (e)=>{
     const username = email.split('@')[0];
     const unameKey = username.toLowerCase();
 
-    // Create user profile and a username index for search
     await setDoc(doc(db,'users', uid), { username, photoURL:'', createdAt: Date.now() });
     await setDoc(doc(db,'usernames', unameKey), { uid });
 
@@ -57,7 +50,6 @@ $('signupBtn')?.addEventListener('click', async (e)=>{
   }catch(e){ alert(e.message); }
 });
 
-// Google sign-in
 $('googleBtn')?.addEventListener('click', async ()=>{
   try{
     const provider = new GoogleAuthProvider();
@@ -66,7 +58,6 @@ $('googleBtn')?.addEventListener('click', async ()=>{
   }catch(e){ alert(e.message); }
 });
 
-// Anonymous (Guest)
 $('anonBtn')?.addEventListener('click', async ()=>{
   try{
     await signInAnonymously(auth);
@@ -74,7 +65,6 @@ $('anonBtn')?.addEventListener('click', async ()=>{
   }catch(e){ alert(e.message); }
 });
 
-// Password reset
 $('forgot')?.addEventListener('click', async (e)=>{
   e.preventDefault();
   try{
@@ -84,4 +74,3 @@ $('forgot')?.addEventListener('click', async (e)=>{
     alert('Password reset email sent.');
   }catch(err){ alert(err.message); }
 });
-
