@@ -36,6 +36,8 @@ const form = document.getElementById('chat-form');
 const msg  = document.getElementById('msg');
 const sendBtn = document.getElementById('sendBtn');
 const guestNotice = document.getElementById('guestNotice');
+const backBtn = document.getElementById('backBtn');
+const waShell = document.querySelector('.wa-shell');
 
 let currentUser = null;
 let activeContact = null;
@@ -108,6 +110,7 @@ function openChatWith(contact){
   activeContact = contact;
   activeName.textContent = contact.username || 'User';
   activeAvatar.src = contact.photoURL || 'https://ui-avatars.com/api/?background=37474F&color=fff&name=' + encodeURIComponent(activeName.textContent);
+  waShell.classList.add('mobile-chat-active');
   startRoomListener();
 }
 
@@ -159,12 +162,17 @@ followBtn.addEventListener('click', async ()=>{
   try {
     await setDoc(doc(db, `users/${currentUser.uid}/following/${targetUid}`), { followedAt: serverTimestamp() });
     await setDoc(doc(db, `users/${targetUid}/followers/${currentUser.uid}`), { followedAt: serverTimestamp() });
-    alert(`You are now following ${name}. They will appear in your list.`);
+    alert(`You are now following ${name}.`);
     userSearch.value = '';
   } catch(e) {
     console.error("Follow Error:", e);
     alert("Failed to follow user. Please check the console for errors.");
   }
+});
+
+backBtn.addEventListener('click', () => {
+  waShell.classList.remove('mobile-chat-active');
+  activeContact = null;
 });
 
 meProfileBtn.addEventListener('click', ()=> profileDrawer.classList.remove('hidden'));
