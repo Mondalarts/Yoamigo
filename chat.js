@@ -75,9 +75,9 @@ async function loadMeUI(user){
 }
 
 function loadFollowingList(){
-  followingList.innerHTML='';
+  if(!currentUser) return;
   const followingRef = collection(db, 'users', currentUser.uid, 'following');
-  onSnapshot(query(followingRef), async (snap)=>{
+  onSnapshot(query(followingRef, orderBy("followedAt", "desc")), async (snap)=>{
     followingList.innerHTML='';
     for(const followingDoc of snap.docs){
       const followingUid = followingDoc.id;
@@ -157,19 +157,13 @@ followBtn.addEventListener('click', async ()=>{
   if(targetUid === currentUser.uid) { return alert('You cannot follow yourself.'); }
 
   try {
-    // Add target to my 'following' list
-    await setDoc(doc(db, `users/${currentUser.uid}/following/${targetUid}`), {
-        followedAt: serverTimestamp()
-    });
-    // Add me to target's 'followers' list
-    await setDoc(doc(db, `users/${targetUid}/followers/${currentUser.uid}`), {
-        followedAt: serverTimestamp()
-    });
-    alert(`You are now following ${name}.`);
+    await setDoc(doc(db, `users/${currentUser.uid}/following/${targetUid}`), { followedAt: serverTimestamp() });
+    await setDoc(doc(db, `users/${targetUid}/followers/${currentUser.uid}`), { followedAt: serverTimestamp() });
+    alert(`You are now following ${name}. They will appear in your list.`);
     userSearch.value = '';
   } catch(e) {
-    console.error("Follow error:", e);
-    alert("Failed to follow user. " + e.message);
+    console.error("Follow Error:", e);
+    alert("Failed to follow user. Please check the console for errors.");
   }
 });
 
