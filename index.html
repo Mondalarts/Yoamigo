@@ -4,47 +4,19 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Yoamigo Login</title>
-  <style>
-    body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0f1422;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
-    /* Uiverse form */
-    .form-container {
-      width: 320px; border-radius: .75rem; background-color: rgba(17,24,39,1);
-      padding: 2rem; color: rgba(243,244,246,1); box-shadow:0 20px 60px #0008; border:1px solid #0005;
-    }
-    .title { text-align:center; font-size:1.5rem; line-height:2rem; font-weight:700; margin:0 }
-    .form { margin-top:1.5rem }
-    .input-group { margin-top:.25rem; font-size:.875rem; line-height:1.25rem }
-    .input-group label { display:block; color:rgba(156,163,175,1); margin-bottom:4px }
-    .input-group input {
-      width:100%; border-radius:.375rem; border:1px solid rgba(55,65,81,1); outline:0;
-      background-color:rgba(17,24,39,1); padding:.75rem 1rem; color:rgba(243,244,246,1);
-    }
-    .input-group input:focus { border-color: rgba(167,139,250,1) }
-    .forgot { display:flex; justify-content:flex-end; font-size:.75rem; color:rgba(156,163,175,1); margin:8px 0 14px }
-    .forgot a,.signup a { color:#fff; text-decoration:none; font-size:14px }
-    .forgot a:hover,.signup a:hover { text-decoration: underline rgba(167,139,250,1) }
-    .sign { display:block; width:100%; background:rgba(167,139,250,1); padding:.75rem; text-align:center; color:#111827; border:none; border-radius:.375rem; font-weight:600; cursor:pointer }
-    .social-message { display:flex; align-items:center; padding-top:1rem }
-    .line { height:1px; flex:1 1 0%; background-color: rgba(55,65,81,1) }
-    .social-message .message { padding:0 .75rem; font-size:.875rem; color: rgba(156,163,175,1) }
-    .social-icons { display:flex; justify-content:center; gap:8px; margin-top:8px }
-    .icon { border-radius:.25rem; padding:.6rem .75rem; border:1px solid #ffffff22; background:transparent; color:#fff; cursor:pointer }
-    .apple { background:#111; border-color:#333 }
-    .anon { background:#222; border-color:#333; color:#aaa }
-    .hint { color:#9aa0a6; font-size:12px; text-align:center; margin-top:10px }
-  </style>
+  <link rel="stylesheet" href="./style.css" />
 </head>
-<body>
+<body class="auth-body">
   <div class="form-container">
     <p class="title">Login</p>
-    <form class="form" id="loginForm">
+    <form class="form" id="loginForm" onsubmit="return false;">
       <div class="input-group">
         <label for="flink">Flink (number)</label>
-        <input type="number" name="flink" id="flink" placeholder="e.g., 845213" />
+        <input type="number" id="flink" placeholder="e.g., 845213" />
       </div>
       <div class="input-group">
         <label for="password">Password</label>
-        <input type="password" name="password" id="password" placeholder="••••••••" />
+        <input type="password" id="password" placeholder="••••••••" />
         <div class="forgot"><a href="#" id="forgot">Forgot Password?</a></div>
       </div>
       <button class="sign" id="loginBtn" type="button">Sign in</button>
@@ -60,6 +32,6 @@
     <p class="hint">Sign Up will generate a new flink for this device.</p>
   </div>
 
-  <script type="module" src="script.js"></script>
+  <script type="module" src="./script.js"></script>
 </body>
 </html>
