@@ -5,21 +5,17 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Yoamigo Login</title>
   <link rel="stylesheet" href="./style.css" />
-  <style>
-    /* Small tweaks for email UI */
-    .input-group label span.req{color:#ff9e9e;margin-left:4px}
-  </style>
 </head>
 <body class="auth-body">
   <div class="form-container">
     <p class="title">Login</p>
     <form class="form" id="loginForm" onsubmit="return false;">
       <div class="input-group">
-        <label for="email">Email <span class="req">*</span></label>
+        <label for="email">Email</label>
         <input type="email" id="email" placeholder="name@example.com" />
       </div>
       <div class="input-group">
-        <label for="password">Password <span class="req">*</span></label>
+        <label for="password">Password</label>
         <input type="password" id="password" placeholder="••••••••" />
         <div class="forgot"><a href="#" id="forgot">Forgot Password?</a></div>
       </div>
@@ -29,11 +25,9 @@
     <div class="social-message"><div class="line"></div><p class="message">Or continue with</p><div class="line"></div></div>
     <div class="social-icons">
       <button class="icon" id="googleBtn" aria-label="Login with Google">Google</button>
-      <button class="icon apple" id="appleBtn" aria-label="Login with Apple">Apple</button>
       <button class="icon anon" id="anonBtn" aria-label="Anonymous">Guest</button>
     </div>
     <p class="signup">Don’t have an account? <a href="#" id="signupBtn">Sign up</a></p>
-    <p class="hint">Use a valid email and a strong password.</p>
   </div>
 
   <script type="module" src="./script.js"></script>
