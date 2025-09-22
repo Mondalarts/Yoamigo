@@ -141,10 +141,23 @@ function escapeHTML(s){ return (s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<'
 function formatTime(ts){ try{ return ts?.toDate?.().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) || ''; }catch{return ''} }
 
 // Demo “Add contact”: enter a UID to add
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+// ...
 addContactBtn.addEventListener('click', async ()=>{
-  const key = userSearch.value.trim();
-  if(!key) return;
-  // For demo: assume input is uid. Create a minimal contact entry.
+  const name = userSearch.value.trim().toLowerCase();
+  if(!name) return;
+  const ix = await getDoc(doc(db,'usernames', name));
+  if(!ix.exists()){ alert('No user found for that username'); return; }
+  const uid = ix.data().uid;
+  if(uid === currentUser.uid) { alert('Cannot add yourself'); return; }
+  const usnap = await getDoc(doc(db,'users', uid));
+  const u = usnap.data() || { username: name, photoURL: '' };
+  await setDoc(doc(db,'contacts', currentUser.uid, 'list', uid), {
+    username: u.username || name, photoURL: u.photoURL || ''
+  });
+  userSearch.value='';
+});
+
   // In production: implement username index to resolve name -> uid.
   const uref = doc(db,'users', key);
   const snap = await getDoc(uref);
@@ -167,3 +180,4 @@ saveProfileBtn.addEventListener('click', async ()=>{
   await loadMeUI(currentUser);
   profileDrawer.classList.add('hidden');
 });
+
