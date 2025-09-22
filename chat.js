@@ -18,20 +18,17 @@ const app = initializeApp(cfg);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-/* UI refs */
 const contactList = document.getElementById('contactList');
 const userSearch  = document.getElementById('userSearch');
 const addContactBtn = document.getElementById('addContactBtn');
 const meAvatar = document.getElementById('meAvatar');
 const meName   = document.getElementById('meName');
 const meProfileBtn = document.getElementById('meProfileBtn');
-
 const profileDrawer = document.getElementById('profileDrawer');
 const profileAvatar = document.getElementById('profileAvatar');
 const profileName   = document.getElementById('profileName');
 const saveProfileBtn= document.getElementById('saveProfileBtn');
 const closeProfileBtn= document.getElementById('closeProfileBtn');
-
 const activeAvatar = document.getElementById('activeAvatar');
 const activeName   = document.getElementById('activeName');
 const feed = document.getElementById('chat-window');
@@ -39,8 +36,6 @@ const form = document.getElementById('chat-form');
 const msg  = document.getElementById('msg');
 const sendBtn = document.getElementById('sendBtn');
 const guestNotice = document.getElementById('guestNotice');
-
-/* Friend request UI */
 const reqBar   = document.getElementById('reqBar');
 const reqCount = document.getElementById('reqCount');
 const openReqBtn = document.getElementById('openReqBtn');
@@ -59,7 +54,6 @@ onAuthStateChanged(auth, async (user)=>{
   await loadMeUI(user);
   await loadContacts();
   listenToIncomingRequests();
-
   if(user.isAnonymous){
     sendBtn.disabled = true; msg.disabled = true; guestNotice.classList.remove('hidden');
   }
@@ -152,55 +146,36 @@ function appendMessage(m){
 function escapeHTML(s){ return (s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 function formatTime(ts){ try{ return ts?.toDate?.().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) || ''; }catch{return ''} }
 
-/* Friend Requests */
-
-// Send request instead of direct add
 addContactBtn.addEventListener('click', async ()=>{
   const name = userSearch.value.trim().toLowerCase();
   if(!name) return;
-
   const ix = await getDoc(doc(db,'usernames', name));
   if(!ix.exists()){ alert('No user found for that username'); return; }
   const toUid = ix.data().uid;
   if(toUid === currentUser.uid) { alert('Cannot send request to yourself'); return; }
-
   const meSnap = await getDoc(doc(db,'users', currentUser.uid));
   const me = meSnap.data() || { username: 'me' };
   const themSnap = await getDoc(doc(db,'users', toUid));
   const them = themSnap.data() || { username: name };
-
   const existingFriend = await getDoc(doc(db,'contacts', currentUser.uid, 'list', toUid));
   if(existingFriend.exists()){ alert('Already in contacts'); userSearch.value=''; return; }
-
   await addDoc(collection(db,'friend_requests'), {
-    fromUid: currentUser.uid,
-    fromName: me.username || 'me',
-    toUid,
-    toName: them.username || name,
-    status: 'pending',
-    createdAt: serverTimestamp()
+    fromUid: currentUser.uid, fromName: me.username || 'me', toUid,
+    toName: them.username || name, status: 'pending', createdAt: serverTimestamp()
   });
-
   alert('Friend request sent');
   userSearch.value='';
 });
 
-// Incoming requests listener
 function listenToIncomingRequests(){
-  const qIn = query(collection(db,'friend_requests'),
-    where('toUid','==', currentUser.uid),
-    where('status','==','pending')
-  );
+  if(!currentUser) return;
+  const qIn = query(collection(db,'friend_requests'), where('toUid','==',currentUser.uid), where('status','==','pending'));
   onSnapshot(qIn, (snap)=>{
     const n = snap.size;
-    if(n>0){
-      reqBar.style.display = 'flex';
-      reqCount.textContent = `${n} friend request${n>1?'s':''}`;
-    }else{
-      reqBar.style.display = 'none';
-    }
+    reqBar.style.display = n > 0 ? 'flex' : 'none';
+    reqCount.textContent = `${n} friend request${n>1?'s':''}`;
     renderReqList(snap);
-  });
+  }, (err)=>{ console.error("Request listener failed:", err); });
 }
 
 function renderReqList(snap){
@@ -208,12 +183,9 @@ function renderReqList(snap){
   snap.forEach(d=>{
     const r = d.data(); const id = d.id;
     const item = document.createElement('div');
-    item.style.display='flex';
-    item.style.justifyContent='space-between';
-    item.style.alignItems='center';
-    item.style.padding='8px 0';
-    item.style.borderBottom='1px solid #0a0f13';
-    item.innerHTML = `<div><strong>${escapeHTML(r.fromName||'user')}</strong> wants to connect</div>`;
+    item.className = 'req-item';
+    const left = document.createElement('div');
+    left.innerHTML = `<strong>${escapeHTML(r.fromName||'user')}</strong> wants to connect`;
     const row = document.createElement('div');
     const acceptBtn = document.createElement('button');
     acceptBtn.className='btn tiny'; acceptBtn.textContent='Accept';
@@ -223,33 +195,37 @@ function renderReqList(snap){
     rejectBtn.style.marginLeft='8px';
     rejectBtn.addEventListener('click', ()=>rejectRequest(id));
     row.append(acceptBtn, rejectBtn);
-    item.appendChild(row);
+    item.append(left, row);
     reqList.appendChild(item);
   });
 }
 
 async function acceptRequest(id, r){
-  const fromUser = await getDoc(doc(db,'users', r.fromUid));
-  const toUser   = await getDoc(doc(db,'users', r.toUid));
-  const fromName = (fromUser.data()?.username)|| r.fromName || 'user';
-  const toName   = (toUser.data()?.username)|| r.toName || 'user';
-
-  await setDoc(doc(db,'contacts', r.fromUid, 'list', r.toUid), { username: toName, photoURL: '' }, { merge:true });
-  await setDoc(doc(db,'contacts', r.toUid,   'list', r.fromUid), { username: fromName, photoURL: '' }, { merge:true });
-
-  await updateDoc(doc(db,'friend_requests', id), { status:'accepted' });
-  alert('Friend added');
+  try{
+    if(!r?.fromUid || !r?.toUid){ return alert('Invalid request data'); }
+    if(r.toUid !== currentUser.uid){ return alert('Not authorized'); }
+    const [fromSnap, toSnap] = await Promise.all([ getDoc(doc(db,'users', r.fromUid)), getDoc(doc(db,'users', r.toUid)) ]);
+    const fromName = (fromSnap.data()?.username)|| r.fromName || 'user';
+    const toName   = (toSnap.data()?.username)|| r.toName || 'user';
+    await Promise.all([
+      setDoc(doc(db,'contacts', r.fromUid, 'list', r.toUid), { username: toName, photoURL: '' }),
+      setDoc(doc(db,'contacts', r.toUid, 'list', r.fromUid), { username: fromName, photoURL: '' })
+    ]);
+    await updateDoc(doc(db,'friend_requests', id), { status:'accepted' });
+    alert('Friend added');
+  }catch(e){ console.error('Accept Request Error:', e); alert(e.message); }
 }
 
 async function rejectRequest(id){
-  await updateDoc(doc(db,'friend_requests', id), { status:'rejected' });
-  alert('Request rejected');
+  try{
+    await updateDoc(doc(db,'friend_requests', id), { status:'rejected' });
+    alert('Request rejected');
+  }catch(e){ console.error('Reject Request Error:', e); alert(e.message); }
 }
 
 openReqBtn?.addEventListener('click', ()=> reqDrawer.classList.remove('hidden'));
 closeReqBtn?.addEventListener('click', ()=> reqDrawer.classList.add('hidden'));
 
-/* Profile */
 meProfileBtn.addEventListener('click', ()=> profileDrawer.classList.remove('hidden'));
 closeProfileBtn.addEventListener('click', ()=> profileDrawer.classList.add('hidden'));
 saveProfileBtn.addEventListener('click', async ()=>{
