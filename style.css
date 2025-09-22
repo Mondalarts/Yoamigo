@@ -25,19 +25,18 @@
 
 /* WA layout */
 body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
-.wa-shell{height:100dvh;display:grid;grid-template-columns:360px 1fr}
+.wa-shell{height:100dvh;display:grid;grid-template-columns:360px 1fr; position: relative; overflow: hidden;}
 .wa-contacts{background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column}
 .wa-contacts__head{display:flex;align-items:center;justify-content:space-between;padding:10px;border-bottom:1px solid var(--border)}
 .me{display:flex;align-items:center;gap:10px;cursor:pointer}
 .me img{width:36px;height:36px;border-radius:50%;object-fit:cover}
 .me-name{font-weight:600}
-.req-bar{display:none;padding:6px 10px;background:#1a242b;border-bottom:1px solid var(--border);justify-content:space-between;align-items:center}
 .wa-search{display:flex;gap:8px;padding:10px;border-bottom:1px solid var(--border)}
 .wa-search input{flex:1;background:var(--input);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:10px}
 .btn{border:0;border-radius:10px;cursor:pointer}
 .btn.ghost{background:#ffffff10;color:#e1e3e6;padding:8px 12px;border:1px solid #ffffff22}
 .btn.tiny{background:#ffffff10;color:#e1e3e6;padding:6px 10px;border:1px solid #ffffff22;font-size:12px}
-.wa-list{list-style:none;margin:0;padding:0;overflow:auto}
+.wa-list{list-style:none;margin:0;padding:0;overflow-y:auto;flex-grow: 1;}
 .wa-list li{display:flex;gap:10px;align-items:center;padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--border)}
 .wa-list li:hover{background:var(--input)}
 .wa-list img{width:40px;height:40px;border-radius:50%;object-fit:cover}
@@ -46,11 +45,11 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui
 .wa-list .last{font-size:12px;color:var(--muted)}
 .wa-chat{display:grid;grid-template-rows:auto 1fr auto;background:var(--bg)}
 .wa-chat__head{display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid var(--border);background:var(--panel)}
-.contact-info{display:flex;gap:12px;align-items:center}
+.contact-info{display:flex;gap:12px;align-items:center; flex-grow: 1;}
 .contact-info img{width:36px;height:36px;border-radius:50%;object-fit:cover}
 .contact-info .title{font-weight:700}
 .contact-info .sub{font-size:12px;color:var(--muted)}
-.wa-feed{padding:14px;overflow:auto;display:flex;flex-direction:column;gap:10px;background:var(--bg)}
+.wa-feed{padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;background:var(--bg)}
 .msg{max-width:70%;padding:10px 12px;border-radius:12px;line-height:1.4;border:1px solid var(--border);background:var(--input)}
 .me-msg{align-self:flex-end;background:var(--me);border-color:#003e33}
 .msg .time{display:block;font-size:11px;color:#a2b3bd;margin-top:4px;text-align:right}
@@ -62,12 +61,20 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui
 .hidden{display:none}
 
 /* Drawer */
-.profile-drawer{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0009}
+.profile-drawer{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0009; z-index: 10;}
 .profile-drawer.hidden{display:none}
 .drawer-card{width:min(360px,92vw);background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:12px}
 .avatar-wrap{display:grid;place-items:center}
 .avatar-wrap img{width:96px;height:96px;border-radius:50%;object-fit:cover;border:2px solid var(--border)}
-.hint{color:#9aa0a6;font-size:12px}
-.req-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
 
-@media (max-width: 920px){ .wa-shell{grid-template-columns:1fr} }
+/* --- Mobile Responsive Chat Flow --- */
+.btn-back { display: none; background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; padding-right: 15px; }
+
+@media (max-width: 768px) {
+  .wa-shell { grid-template-columns: 1fr; }
+  .wa-contacts { transition: transform 0.3s ease-in-out; width: 100%; position: absolute; top: 0; bottom: 0; }
+  .wa-chat { position: absolute; inset: 0; transform: translateX(100%); transition: transform 0.3s ease-in-out; width: 100%; }
+  .mobile-chat-active .wa-contacts { transform: translateX(-100%); }
+  .mobile-chat-active .wa-chat { transform: translateX(0); }
+  .mobile-chat-active .btn-back { display: block; }
+}
