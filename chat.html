@@ -17,17 +17,12 @@
         <button class="btn ghost" id="logoutBtn">Logout</button>
       </header>
 
-      <div class="req-bar" id="reqBar">
-        <span id="reqCount">0 friend requests</span>
-        <button class="btn tiny" id="openReqBtn">View</button>
-      </div>
-
       <div class="wa-search">
-        <input id="userSearch" type="text" placeholder="Search username">
-        <button id="addContactBtn" class="btn tiny">Add</button>
+        <input id="userSearch" type="text" placeholder="Search username to follow">
+        <button id="followBtn" class="btn tiny">Follow</button>
       </div>
 
-      <ul class="wa-list" id="contactList"></ul>
+      <ul class="wa-list" id="followingList"></ul>
     </aside>
 
     <main class="wa-chat">
@@ -35,8 +30,8 @@
         <div class="contact-info">
           <img id="activeAvatar" src="" alt="">
           <div>
-            <div class="title" id="activeName">Select a contact</div>
-            <div class="sub" id="activeSub">Online</div>
+            <div class="title" id="activeName">Select a contact to chat</div>
+            <div class="sub" id="activeSub"></div>
           </div>
         </div>
       </header>
@@ -64,17 +59,6 @@
         <button class="btn ghost" id="closeProfileBtn">Close</button>
       </div>
       <p class="hint">Avatar uploads disabled to stay free.</p>
-    </div>
-  </div>
-
-  <!-- Friend requests drawer -->
-  <div class="profile-drawer hidden" id="reqDrawer">
-    <div class="drawer-card">
-      <h3>Friend Requests</h3>
-      <div id="reqList"></div>
-      <div class="row" style="margin-top:10px">
-        <button class="btn ghost" id="closeReqBtn">Close</button>
-      </div>
     </div>
   </div>
 
