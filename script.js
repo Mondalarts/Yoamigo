@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
 const cfg = {
   apiKey: "AIzaSyCfhn6-aFg9u_S93ioPLp6TSjjhnDveMfA",
@@ -12,6 +13,7 @@ const cfg = {
 };
 const app = initializeApp(cfg);
 const auth = getAuth(app);
+const db   = getFirestore(app);
 
 const $ = (id) => document.getElementById(id);
 const emailInp = $('email');
@@ -33,7 +35,15 @@ $('signupBtn')?.addEventListener('click', async (e)=>{
     const email = emailInp.value.trim();
     const pwd   = pwdInp.value.trim();
     if(!email || !pwd) return alert('Enter email and password to sign up');
+
     await createUserWithEmailAndPassword(auth, email, pwd);
+    const uid = auth.currentUser.uid;
+    const username = email.split('@')[0];
+    const unameKey = username.toLowerCase();
+
+    await setDoc(doc(db,'users', uid), { username, photoURL:'', createdAt: Date.now() });
+    await setDoc(doc(db,'usernames', unameKey), { uid });
+
     alert('Account created. Redirecting to chat…');
     location.href = './chat.html';
   }catch(e){ alert(e.message); }
