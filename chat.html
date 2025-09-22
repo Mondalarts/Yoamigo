@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Yoamigo Chat</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
   <div class="shell">
@@ -36,13 +36,15 @@
           <div class="actions">
             <button type="button" class="icon-btn" title="Emoji">😊</button>
             <button type="button" class="icon-btn" title="Attach">📎</button>
-            <button class="btn primary">Send</button>
+            <button class="btn primary" id="sendBtn">Send</button>
           </div>
         </form>
+        <div id="guestNotice" class="guest-note hidden">Guest mode: sending messages is disabled.</div>
       </footer>
     </main>
   </div>
 
-  <script type="module" src="chat.js"></script>
+  <script type="module" src="./chat.js"></script>
 </body>
 </html>
+
