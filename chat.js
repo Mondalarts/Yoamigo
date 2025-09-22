@@ -46,8 +46,6 @@ onAuthStateChanged(auth, async (user)=>{
   await ensureUserDoc(user);
   await loadMeUI(user);
   await loadContacts();
-
-  // Disable send for guests
   if(user.isAnonymous){
     sendBtn.disabled = true; msg.disabled = true; guestNotice.classList.remove('hidden');
   }
@@ -140,9 +138,7 @@ function appendMessage(m){
 function escapeHTML(s){ return (s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 function formatTime(ts){ try{ return ts?.toDate?.().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) || ''; }catch{return ''} }
 
-// Demo “Add contact”: enter a UID to add
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-// ...
+// Username search -> UID via index
 addContactBtn.addEventListener('click', async ()=>{
   const name = userSearch.value.trim().toLowerCase();
   if(!name) return;
@@ -158,17 +154,6 @@ addContactBtn.addEventListener('click', async ()=>{
   userSearch.value='';
 });
 
-  // In production: implement username index to resolve name -> uid.
-  const uref = doc(db,'users', key);
-  const snap = await getDoc(uref);
-  if(!snap.exists()) { alert('No user found for that UID (demo mode)'); return; }
-  const u = snap.data();
-  await setDoc(doc(db,'contacts', currentUser.uid, 'list', key), {
-    username: u.username || 'User', photoURL: u.photoURL || ''
-  });
-  userSearch.value='';
-});
-
 // Profile drawer
 meProfileBtn.addEventListener('click', ()=> profileDrawer.classList.remove('hidden'));
 closeProfileBtn.addEventListener('click', ()=> profileDrawer.classList.add('hidden'));
@@ -180,4 +165,3 @@ saveProfileBtn.addEventListener('click', async ()=>{
   await loadMeUI(currentUser);
   profileDrawer.classList.add('hidden');
 });
-
