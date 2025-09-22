@@ -37,7 +37,7 @@ $('loginBtn')?.addEventListener('click', async ()=>{
   }catch(e){ alert(e.message); }
 });
 
-// Sign up generates flink
+// Sign up generates flink (requires password)
 $('signupBtn')?.addEventListener('click', async (e)=>{
   e.preventDefault();
   try{
@@ -46,6 +46,7 @@ $('signupBtn')?.addEventListener('click', async (e)=>{
 
     const flink = genFlink();
     const email = makeEmail(flink);
+
     const cred = await createUserWithEmailAndPassword(auth, email, pwd);
     await setDoc(doc(db,'flinks', flink), { email, uid: cred.user.uid, createdAt: Date.now() });
 
@@ -65,14 +66,13 @@ $('googleBtn')?.addEventListener('click', async ()=>{
 
 // Apple placeholder (requires Apple setup in Firebase)
 $('appleBtn')?.addEventListener('click', ()=>{
-  alert('Apple Sign-in requires configuration in Firebase → Sign-in method → Apple.');
+  alert('Apple Sign-in requires configuration in Firebase → Authentication → Sign-in method → Apple.');
 });
 
 // Anonymous (Guest)
 $('anonBtn')?.addEventListener('click', async ()=>{
   try{
     await signInAnonymously(auth);
-    // Decide: keep them on chat with send disabled or redirect to a guest page
     location.href = './chat.html';
   }catch(e){ alert(e.message); }
 });
@@ -82,4 +82,3 @@ $('forgot')?.addEventListener('click', (e)=>{
   e.preventDefault();
   alert('Password reset via flink is not implemented in this demo.');
 });
-
