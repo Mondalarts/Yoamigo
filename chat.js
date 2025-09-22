@@ -1,8 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc, setDoc, collection, addDoc, updateDoc,
-  serverTimestamp, query, orderBy, onSnapshot, where
+  getFirestore, doc, getDoc, setDoc, collection, addDoc,
+  serverTimestamp, query, orderBy, onSnapshot
 } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
 const cfg = {
@@ -18,9 +18,9 @@ const app = initializeApp(cfg);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-const contactList = document.getElementById('contactList');
+const followingList = document.getElementById('followingList');
 const userSearch  = document.getElementById('userSearch');
-const addContactBtn = document.getElementById('addContactBtn');
+const followBtn = document.getElementById('followBtn');
 const meAvatar = document.getElementById('meAvatar');
 const meName   = document.getElementById('meName');
 const meProfileBtn = document.getElementById('meProfileBtn');
@@ -36,12 +36,6 @@ const form = document.getElementById('chat-form');
 const msg  = document.getElementById('msg');
 const sendBtn = document.getElementById('sendBtn');
 const guestNotice = document.getElementById('guestNotice');
-const reqBar   = document.getElementById('reqBar');
-const reqCount = document.getElementById('reqCount');
-const openReqBtn = document.getElementById('openReqBtn');
-const reqDrawer  = document.getElementById('reqDrawer');
-const reqList    = document.getElementById('reqList');
-const closeReqBtn= document.getElementById('closeReqBtn');
 
 let currentUser = null;
 let activeContact = null;
@@ -52,8 +46,7 @@ onAuthStateChanged(auth, async (user)=>{
   currentUser = user;
   await ensureUserDoc(user);
   await loadMeUI(user);
-  await loadContacts();
-  listenToIncomingRequests();
+  loadFollowingList();
   if(user.isAnonymous){
     sendBtn.disabled = true; msg.disabled = true; guestNotice.classList.remove('hidden');
   }
@@ -81,24 +74,33 @@ async function loadMeUI(user){
   meAvatar.src = avatar; profileAvatar.src = avatar; profileName.value = uname;
 }
 
-async function loadContacts(){
-  contactList.innerHTML='';
-  const cref = collection(db,'contacts', currentUser.uid, 'list');
-  const q = query(cref, orderBy('username'));
-  onSnapshot(q,(snap)=>{
-    contactList.innerHTML='';
-    snap.forEach(d=>{
-      const c = d.data();
+function loadFollowingList(){
+  followingList.innerHTML='';
+  const followingRef = collection(db, 'users', currentUser.uid, 'following');
+  onSnapshot(query(followingRef), async (snap)=>{
+    followingList.innerHTML='';
+    for(const followingDoc of snap.docs){
+      const followingUid = followingDoc.id;
+      const userSnap = await getDoc(doc(db, 'users', followingUid));
+      if(!userSnap.exists()) continue;
+
+      const userData = userSnap.data();
       const li = document.createElement('li');
-      const img = document.createElement('img'); img.src = c.photoURL || 'https://ui-avatars.com/api/?background=37474F&color=fff&name=' + encodeURIComponent(c.username||'U');
-      const meta = document.createElement('div'); meta.className='meta';
-      const name = document.createElement('div'); name.className='name'; name.textContent = c.username || 'User';
-      const last = document.createElement('div'); last.className='last'; last.textContent = 'Tap to chat';
+      const img = document.createElement('img');
+      img.src = userData.photoURL || 'https://ui-avatars.com/api/?background=37474F&color=fff&name=' + encodeURIComponent(userData.username||'U');
+      const meta = document.createElement('div');
+      meta.className='meta';
+      const name = document.createElement('div');
+      name.className='name';
+      name.textContent = userData.username || 'User';
+      const last = document.createElement('div');
+      last.className='last';
+      last.textContent = 'Following';
       meta.append(name,last);
       li.append(img, meta);
-      li.addEventListener('click', ()=> openChatWith({ uid: d.id, username: c.username, photoURL: c.photoURL }));
-      contactList.appendChild(li);
-    });
+      li.addEventListener('click', ()=> openChatWith({ uid: followingUid, ...userData }));
+      followingList.appendChild(li);
+    }
   });
 }
 
@@ -146,85 +148,30 @@ function appendMessage(m){
 function escapeHTML(s){ return (s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 function formatTime(ts){ try{ return ts?.toDate?.().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) || ''; }catch{return ''} }
 
-addContactBtn.addEventListener('click', async ()=>{
+followBtn.addEventListener('click', async ()=>{
   const name = userSearch.value.trim().toLowerCase();
   if(!name) return;
   const ix = await getDoc(doc(db,'usernames', name));
-  if(!ix.exists()){ alert('No user found for that username'); return; }
-  const toUid = ix.data().uid;
-  if(toUid === currentUser.uid) { alert('Cannot send request to yourself'); return; }
-  const meSnap = await getDoc(doc(db,'users', currentUser.uid));
-  const me = meSnap.data() || { username: 'me' };
-  const themSnap = await getDoc(doc(db,'users', toUid));
-  const them = themSnap.data() || { username: name };
-  const existingFriend = await getDoc(doc(db,'contacts', currentUser.uid, 'list', toUid));
-  if(existingFriend.exists()){ alert('Already in contacts'); userSearch.value=''; return; }
-  await addDoc(collection(db,'friend_requests'), {
-    fromUid: currentUser.uid, fromName: me.username || 'me', toUid,
-    toName: them.username || name, status: 'pending', createdAt: serverTimestamp()
-  });
-  alert('Friend request sent');
-  userSearch.value='';
+  if(!ix.exists()){ return alert('No user found for that username'); }
+  const targetUid = ix.data().uid;
+  if(targetUid === currentUser.uid) { return alert('You cannot follow yourself.'); }
+
+  try {
+    // Add target to my 'following' list
+    await setDoc(doc(db, `users/${currentUser.uid}/following/${targetUid}`), {
+        followedAt: serverTimestamp()
+    });
+    // Add me to target's 'followers' list
+    await setDoc(doc(db, `users/${targetUid}/followers/${currentUser.uid}`), {
+        followedAt: serverTimestamp()
+    });
+    alert(`You are now following ${name}.`);
+    userSearch.value = '';
+  } catch(e) {
+    console.error("Follow error:", e);
+    alert("Failed to follow user. " + e.message);
+  }
 });
-
-function listenToIncomingRequests(){
-  if(!currentUser) return;
-  const qIn = query(collection(db,'friend_requests'), where('toUid','==',currentUser.uid), where('status','==','pending'));
-  onSnapshot(qIn, (snap)=>{
-    const n = snap.size;
-    reqBar.style.display = n > 0 ? 'flex' : 'none';
-    reqCount.textContent = `${n} friend request${n>1?'s':''}`;
-    renderReqList(snap);
-  }, (err)=>{ console.error("Request listener failed:", err); });
-}
-
-function renderReqList(snap){
-  reqList.innerHTML = '';
-  snap.forEach(d=>{
-    const r = d.data(); const id = d.id;
-    const item = document.createElement('div');
-    item.className = 'req-item';
-    const left = document.createElement('div');
-    left.innerHTML = `<strong>${escapeHTML(r.fromName||'user')}</strong> wants to connect`;
-    const row = document.createElement('div');
-    const acceptBtn = document.createElement('button');
-    acceptBtn.className='btn tiny'; acceptBtn.textContent='Accept';
-    acceptBtn.addEventListener('click', ()=>acceptRequest(id, r));
-    const rejectBtn = document.createElement('button');
-    rejectBtn.className='btn tiny'; rejectBtn.textContent='Reject';
-    rejectBtn.style.marginLeft='8px';
-    rejectBtn.addEventListener('click', ()=>rejectRequest(id));
-    row.append(acceptBtn, rejectBtn);
-    item.append(left, row);
-    reqList.appendChild(item);
-  });
-}
-
-async function acceptRequest(id, r){
-  try{
-    if(!r?.fromUid || !r?.toUid){ return alert('Invalid request data'); }
-    if(r.toUid !== currentUser.uid){ return alert('Not authorized'); }
-    const [fromSnap, toSnap] = await Promise.all([ getDoc(doc(db,'users', r.fromUid)), getDoc(doc(db,'users', r.toUid)) ]);
-    const fromName = (fromSnap.data()?.username)|| r.fromName || 'user';
-    const toName   = (toSnap.data()?.username)|| r.toName || 'user';
-    await Promise.all([
-      setDoc(doc(db,'contacts', r.fromUid, 'list', r.toUid), { username: toName, photoURL: '' }),
-      setDoc(doc(db,'contacts', r.toUid, 'list', r.fromUid), { username: fromName, photoURL: '' })
-    ]);
-    await updateDoc(doc(db,'friend_requests', id), { status:'accepted' });
-    alert('Friend added');
-  }catch(e){ console.error('Accept Request Error:', e); alert(e.message); }
-}
-
-async function rejectRequest(id){
-  try{
-    await updateDoc(doc(db,'friend_requests', id), { status:'rejected' });
-    alert('Request rejected');
-  }catch(e){ console.error('Reject Request Error:', e); alert(e.message); }
-}
-
-openReqBtn?.addEventListener('click', ()=> reqDrawer.classList.remove('hidden'));
-closeReqBtn?.addEventListener('click', ()=> reqDrawer.classList.add('hidden'));
 
 meProfileBtn.addEventListener('click', ()=> profileDrawer.classList.remove('hidden'));
 closeProfileBtn.addEventListener('click', ()=> profileDrawer.classList.add('hidden'));
