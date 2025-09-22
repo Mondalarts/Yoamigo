@@ -1,53 +1,29 @@
 :root{
   --bg:#0b141a; --panel:#111b21; --input:#202c33; --border:#0a0f13;
-  --text:#e8eaed; --muted:#90a4ae; --brand:#6a8cff; --me:#005c4b;
+  --text:#e8eaed; --muted:#90a4ae; --brand:#a78bfa; --me:#005c4b;
 }
 
-/* Auth */
-.auth-body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0f1422;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;color:var(--text)}
-.form-container{width:320px;border-radius:.75rem;background:#111827;padding:2rem;color:#f3f4f6;box-shadow:0 20px 60px #0008;border:1px solid #0005}
+/* Auth (isolated) */
+.auth-body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0f1422;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;color:#f3f4f6}
+.form-container{width:360px;max-width:92vw;border-radius:.75rem;background:#111827;padding:2rem;color:#f3f4f6;box-shadow:0 20px 60px #0008;border:1px solid #0005}
 .title{text-align:center;font-size:1.5rem;line-height:2rem;font-weight:700;margin:0}
 .form{margin-top:1.5rem}
-.input-group{margin-top:.25rem;font-size:.875rem}
+.input-group{margin-top:.25rem}
 .input-group label{display:block;color:#9ca3af;margin-bottom:4px}
-.input-group input{width:100%;border-radius:.375rem;border:1px solid #374151;outline:0;background:#111827;padding:.75rem 1rem;color:#f3f4f6}
-.input-group input:focus{border-color:#a78bfa}
+.input-group .req{color:#ff9e9e;margin-left:4px}
+.input-group input{
+  width:100%;border-radius:.375rem;border:1px solid #374151;background:#111827;color:#f3f4f6;padding:.75rem 1rem;outline:none;box-shadow:none;transition:border-color .15s
+}
+.input-group input:focus{border-color:var(--brand)}
 .forgot{display:flex;justify-content:flex-end;font-size:.75rem;color:#9ca3af;margin:8px 0 14px}
-.sign{display:block;width:100%;background:#a78bfa;padding:.75rem;text-align:center;color:#111827;border:none;border-radius:.375rem;font-weight:600;cursor:pointer}
+.sign{display:block;width:100%;background:var(--brand);padding:.75rem;text-align:center;color:#111827;border:none;border-radius:.375rem;font-weight:600;cursor:pointer}
 .social-message{display:flex;align-items:center;padding-top:1rem}
 .line{height:1px;flex:1;background:#374151}
 .social-message .message{padding:0 .75rem;font-size:.875rem;color:#9ca3af}
 .social-icons{display:flex;justify-content:center;gap:8px;margin-top:8px}
 .icon{border-radius:.25rem;padding:.6rem .75rem;border:1px solid #ffffff22;background:transparent;color:#fff;cursor:pointer}
-.anon{background:#222;border-color:#333;color:#aaa} 
-
-/* --- Force login page styles (override chat inputs) --- */
-.auth-body{background:#0f1422}
-.auth-body .form-container{
-  max-width:360px;margin:auto;background:#111827;color:#f3f4f6;
-  border:1px solid #0005;border-radius:.75rem;padding:2rem;box-shadow:0 20px 60px #0008
-}
-.auth-body .input-group{margin-top:.25rem}
-.auth-body .input-group label{color:#9ca3af}
-.auth-body .input-group input{
-  background:#111827 !important;
-  border:1px solid #374151 !important;
-  color:#f3f4f6 !important;
-  border-radius:.375rem;
-  padding:.75rem 1rem;
-  outline:none;
-  box-shadow:none !important;
-  transition:border-color .15s;
-}
-.auth-body .input-group input:focus{
-  border-color:#a78bfa !important;
-}
-.auth-body .sign{
-  background:#a78bfa;color:#111827;font-weight:600;border-radius:.375rem
-}
-.auth-body .forgot a{color:#9ca3af}
-@media (max-width:480px){ .auth-body{padding:16px} }
-
+.anon{background:#222;border-color:#333;color:#aaa}
+.hint{color:#9aa0a6;font-size:12px;text-align:center;margin-top:10px}
 
 /* WA layout */
 body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
@@ -85,14 +61,22 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui
 .wa-composer{padding:10px;border-top:1px solid var(--border);background:var(--panel)}
 #chat-form{display:flex;align-items:center;gap:10px}
 #msg{flex:1;background:var(--input);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:12px}
-.btn.primary{background:var(--brand);color:#0e1116;padding:10px 14px;font-weight:700}
+.btn.primary{background:#6a8cff;color:#0e1116;padding:10px 14px;font-weight:700}
 .guest-note{margin-top:8px;color:#ffcc88;font-size:13px}
 .hidden{display:none}
 
+/* Profile drawer */
+.profile-drawer{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0009}
+.profile-drawer.hidden{display:none}
+.drawer-card{width:min(360px,92vw);background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.avatar-wrap{display:grid;place-items:center}
+.avatar-wrap img{width:96px;height:96px;border-radius:50%;object-fit:cover;border:2px solid var(--border)}
+.hint{color:#9aa0a6;font-size:12px}
+
+/* Responsive */
 @media (max-width: 920px){
   .wa-shell{grid-template-columns:1fr}
 }
 
-
-
-
+/* Ensure auth styles override chat on login */
+.auth-body .input-group input{box-shadow:none!important}
