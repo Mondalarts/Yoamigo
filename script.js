@@ -17,7 +17,6 @@ const $ = (id) => document.getElementById(id);
 const emailInp = $('email');
 const pwdInp   = $('password');
 
-// Sign in with email/password
 $('loginBtn')?.addEventListener('click', async ()=>{
   try{
     const email = emailInp.value.trim();
@@ -28,7 +27,6 @@ $('loginBtn')?.addEventListener('click', async ()=>{
   }catch(e){ alert(e.message); }
 });
 
-// Sign up with email/password
 $('signupBtn')?.addEventListener('click', async (e)=>{
   e.preventDefault();
   try{
@@ -41,7 +39,6 @@ $('signupBtn')?.addEventListener('click', async (e)=>{
   }catch(e){ alert(e.message); }
 });
 
-// Google sign-in
 $('googleBtn')?.addEventListener('click', async ()=>{
   try{
     const provider = new GoogleAuthProvider();
@@ -50,12 +47,6 @@ $('googleBtn')?.addEventListener('click', async ()=>{
   }catch(e){ alert(e.message); }
 });
 
-// Apple placeholder (requires Apple setup in Firebase)
-$('appleBtn')?.addEventListener('click', ()=>{
-  alert('Apple Sign-in requires configuration in Firebase → Authentication → Sign-in method → Apple.');
-});
-
-// Anonymous (Guest)
 $('anonBtn')?.addEventListener('click', async ()=>{
   try{
     await signInAnonymously(auth);
@@ -63,7 +54,6 @@ $('anonBtn')?.addEventListener('click', async ()=>{
   }catch(e){ alert(e.message); }
 });
 
-// Password reset
 $('forgot')?.addEventListener('click', async (e)=>{
   e.preventDefault();
   try{
@@ -73,4 +63,3 @@ $('forgot')?.addEventListener('click', async (e)=>{
     alert('Password reset email sent.');
   }catch(err){ alert(err.message); }
 });
-
